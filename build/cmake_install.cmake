@@ -131,6 +131,10 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/blue/driving_ws/build/gtest/cmake_install.cmake")
+  include("/home/blue/driving_ws/build/pre/assignment1/cmake_install.cmake")
+  include("/home/blue/driving_ws/build/pre/assignment2/cmake_install.cmake")
+  include("/home/blue/driving_ws/build/pre/xycar_msgs/cmake_install.cmake")
+  include("/home/blue/driving_ws/build/pre/xycar_sim_parking/cmake_install.cmake")
 
 endif()
 

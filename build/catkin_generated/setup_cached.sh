@@ -7,5 +7,4 @@
 # new environment variables
 
 # modified environment variables
-export LD_LIBRARY_PATH='/home/blue/catkin_ws/devel/lib:/opt/ros/melodic/lib'
 export PWD='/home/blue/driving_ws/build'

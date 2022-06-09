@@ -17,6 +17,7 @@ import os
 import random
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+from sensor_msgs.msg import Imu
 
 #=============================================
 # 터미널에서 Ctrl-C 키입력으로 프로그램 실행을 끝낼 때
@@ -125,6 +126,7 @@ def start():
     #=========================================
     rospy.init_node('driving')
     motor = rospy.Publisher('xycar_motor', xycar_motor, queue_size=1)
+    imu   = rospy.Publisher('/imu', Imu, queue_size=1)
     image_sub = rospy.Subscriber("/usb_cam/image_raw/",Image,img_callback)
 
     print ("----- Xycar self driving -----")
@@ -144,35 +146,37 @@ def start():
         img = image.copy()  
         imgRGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
-        # 디버깅을 위해 모니터에 이미지를 디스플레이
-        
-        gray = grayscale(imgRGB)
-        
+        # 이미지처리 부분
+        ## 파라미터
         kernel_size =5
-        blur_gray = gaussian_blur(gray, kernel_size)
         low_threshould = 50
         high_threshould = 200
-        edges= canny(blur_gray, low_threshould, high_threshould)
+
         imshape = img.shape
-        vertices = np.array([[(0,imshape[0]), (0,imshape[0]-80),(280, 280),(350, 280),(imshape[1],imshape[0]-80), (imshape[1],imshape[0])]], dtype=np.int32)
-        mask = region_of_interest(edges, vertices)
+
         rho = 2
         theta = np.pi/180
         threshold=90
         min_line_len=80
         max_line_gap=100
+        vertices = np.array([[(0,imshape[0]), (0,imshape[0]-80),(280, 280),(350, 280),(imshape[1],imshape[0]-80), (imshape[1],imshape[0])]], dtype=np.int32)
 
+        # 전처리
+        gray = grayscale(imgRGB)
+        blur_gray = gaussian_blur(gray, kernel_size)
+        edges= canny(blur_gray, low_threshould, high_threshould)
+        mask = region_of_interest(edges, vertices)
+        
         lines=hough_lines(mask,rho,theta,threshold,min_line_len,max_line_gap)
         lines_edges = weighted_img(lines,img,alpha=0.8,beta=1.,gamma=0.)
         
-
-        plt.figure(figsize=(10,8))
-        plt.imshow(lines_edges)
-        plt.show()
+        # plt.figure(figsize=(10,8))
+        # plt.imshow("Check_line"lines_edges)
+        # plt.show()
         
-
-        #cv2.imshow("CAM View", img)
-        cv2.waitKey(1)       
+        cv2.imshow("CAM View", lines)
+        cv2.waitKey(1)
+        rospy.loginfo(lines)
         #=========================================
         # 핸들조향각 값인 angle값 정하기.
         # 차선의 위치 정보를 이용해서 angle값을 설정함.        
