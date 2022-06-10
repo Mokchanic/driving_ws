@@ -183,9 +183,10 @@ def start():
         # cv2.imshow("Gray", gray)
         # cv2.imshow("Blue_gray", blur_gray)
         # cv2.imshow("Edges", edges)
-        # cv2.imshow("Mask", mask)
-
+        cv2.imshow("Mask", mask)
+        cv2.imshow("CAM View", lines)
         cv2.imshow("CAM View", lines_edges)
+        
         cv2.waitKey(1)
                 
         #=========================================
@@ -194,7 +195,7 @@ def start():
         #=========================================
 		
         # 우선 테스트를 위해 직진(0값)으로 설정
-        angle = 0
+        # angle = 0
 		
         #=========================================
         # 차량의 속도 값인 speed값 정하기.
@@ -203,10 +204,10 @@ def start():
         #=========================================
 
         # 우선 테스트를 위해 느린속도(10값)로 설정
-        speed = 10
+        # speed = 10
 		
         # drive() 호출. drive()함수 안에서 모터 토픽이 발행됨.
-        drive(angle, speed)
+        # drive(angle, speed)
 
 
 #=============================================
