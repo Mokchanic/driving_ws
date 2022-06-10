@@ -19,7 +19,6 @@ import pickle
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from sensor_msgs.msg import Imu
-import PIL
 
 #Camera_calib
 mtx = np.array([[1.15396093e+03, 0.00000000e+00, 6.69705357e+02],
@@ -96,15 +95,14 @@ def preprocess_image(img):
     
     # perspective transformation
     src = np.float32([
-        # (200,275),
-        # (420,275),    
-        # (600,400),
-        # (40,400) 
-        (150,350),
-        (500,350),    
-        (610,400),
-        (30,400) 
-        # (xsize,ysize-150), (0,ysize-150), (0,ysize), (xsize,ysize)
+        (200,275),
+        (420,275),    
+        (600,400),
+        (40,400) 
+        # (150,350),
+        # (500,350),    
+        # (610,400),
+        # (30,400) 
     ])
 
     dst = np.float32([
@@ -607,7 +605,53 @@ def polyfit_adapt_search(img, prev_poly_param, diagnostics=False):
     cv2.polylines(out, [right_poly_pts], isClosed=False, color=(255,255,255), thickness=4)
     
     return out, curr_poly_param
+
+
+def grayscale(img):
+    return cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+# 함께 사용되는 각종 파이썬 패키지들의 import 선언부),0)
+
+def gaussian_blur(img, kernel_size):
+    return cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
+
+
+def canny(img, low_threshould, high_threshold):
+    return cv2.Canny(img, low_threshould, high_threshold)
+
+
+def region_of_interest(img, vertices):
+    mask = np.zeros_like(img)
+
+    if len(img.shape) > 2:
+        channel_count = img.shape[2]
+        ignore_mask_color = (255,) * channel_count
+    else:
+        ignore_mask_color = 255
+
+    cv2.fillPoly(mask, vertices, ignore_mask_color)
+
+    masked_image = cv2.bitwise_and(img, mask)
+    return masked_image
+
+
+def draw_lines(img, lines, color=[255, 0, 0], thickness=5):
+    # If there are no lines to draw, exit.
+    for line in lines:
+        for x1, y1, x2, y2 in line:
+            cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+
+
+def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
+    lines = cv2.HoughLinesP(img,rho, theta, threshold, minLineLength=min_line_len, maxLineGap=max_line_gap)
+    line_img=np.zeros((img.shape[0],img.shape[1],3),dtype=np.uint8)
+    draw_lines(line_img,lines)
+    return line_img 
+
+
+def weighted_img(img, initial_img, alpha=0.8,beta=1.,gamma=0.):
+    return cv2.addWeighted(initial_img,alpha,img, beta,gamma)
 #====== 이미지 전처리 ==========
+
 
 def start():
 
@@ -640,13 +684,28 @@ def start():
         img = image.copy()  
         imgRGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        cv2.imshow("CAM View1", img)  
-        # cv2.waitKey(1)     
+
 
         # 이미지처리 부분
+        ## 파라미터
+        kernel_size =5
+        low_threshould = 50
+        high_threshould = 200
+
+        imshape = img.shape
+
+        rho = 2
+        theta = np.pi/180
+        threshold=90
+        min_line_len=80
+        max_line_gap=100
+        vertices = np.array([[(0,imshape[0]), (0,imshape[0]-150),(imshape[1],imshape[0]-150), (imshape[1],imshape[0])]], dtype=np.int32)
+
+        gray = grayscale(imgRGB)
+        edges= canny(gray, low_threshould, high_threshould)
         bird_eye_img = get_bird_eye(img)
 
-        cv2.imshow("CAM View2", bird_eye_img)       
+        cv2.imshow("CAM View2", edges)       
         # cv2.waitKey(1)
 
         binary_img = get_binary_image(bird_eye_img)

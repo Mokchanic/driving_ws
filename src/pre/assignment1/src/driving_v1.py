@@ -20,7 +20,12 @@ import matplotlib.image as mpimg
 from sensor_msgs.msg import Imu
 
 #Camera_calib
+mtx = np.array([[1.15396093e+03, 0.00000000e+00, 6.69705357e+02],
+                [0.00000000e+00, 1.14802496e+03, 3.85656234e+02],
+                [0.00000000e+00, 0.00000000e+00, 1.00000000e+00]])
 
+dist = np.array([[-2.41017956e-01, -5.30721173e-02, -1.15810355e-03,
+                -1.28318856e-04,  2.67125290e-02]])
 
 #=============================================
 # 터미널에서 Ctrl-C 키입력으로 프로그램 실행을 끝낼 때
@@ -79,6 +84,64 @@ def drive(angle, speed):
 #=============================================
 
 #====== 이미지 전처리 ==========
+def preprocess_image(img):
+    ysize = img.shape[0] # 480
+    xsize = img.shape[1] # 640
+    
+    # undistortion
+    undist = cv2.undistort(img, mtx, dist, None, mtx)
+    
+    # perspective transformation
+    src = np.float32([
+        (200,275),
+        (420,275),    
+        (600,400),
+        (40,400) 
+        # (150,350),
+        # (500,350),    
+        # (610,400),
+        # (30,400) 
+    ])
+
+    dst = np.float32([
+        (xsize - 350, 0),
+        (350, 0),
+        (350, ysize),
+        (xsize - 350, ysize)
+    ])
+    
+    M = cv2.getPerspectiveTransform(src, dst)
+    invM = cv2.getPerspectiveTransform(dst, src)
+    warped = cv2.warpPerspective(undist, M, (xsize, ysize), flags=cv2.INTER_LINEAR)
+
+    # roi crop
+    vertices = np.array([ # region for crop
+        [100, ysize],
+        [100, 0],
+        [540, 0],
+        [540, ysize]
+    ])
+    
+    vertices = np.array(vertices, ndmin=3, dtype=np.int32)
+
+    if len(img.shape) == 3: # (row, column , channel)
+        fill_color = (255,) * 3
+    else:
+        fill_color = 255
+    
+    mask = np.zeros_like(warped)
+    mask = cv2.fillPoly(mask, vertices, fill_color) # mask에서 vertices 모양을 fill_color로 채움
+
+    roi = cv2.bitwise_and(warped, mask) # img에서 mask와 비트연선으로 사진 자르기
+
+    # cv2.imshow("CAM View", roi)
+    # cv2.waitKey(1)
+    
+    return roi
+
+def get_bird_eye(img):
+    return preprocess_image(img)
+
 def grayscale(img):
     return cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 # 함께 사용되는 각종 파이썬 패키지들의 import 선언부),0)
@@ -171,6 +234,7 @@ def start():
         blur_gray = gaussian_blur(gray, kernel_size)
         edges= canny(blur_gray, low_threshould, high_threshould)
         mask = region_of_interest(edges, vertices)
+        # bird_eye_img = get_bird_eye(mask)
         
         lines=hough_lines(mask,rho,theta,threshold,min_line_len,max_line_gap)
         lines_edges = weighted_img(lines,img,alpha=0.8,beta=1.,gamma=0.)
@@ -183,10 +247,10 @@ def start():
         # cv2.imshow("Gray", gray)
         # cv2.imshow("Blue_gray", blur_gray)
         # cv2.imshow("Edges", edges)
-        cv2.imshow("Mask", mask)
+        # cv2.imshow("Mask", mask)
+        # cv2.imshow("CAM View", lines)
         cv2.imshow("CAM View", lines)
-        cv2.imshow("CAM View", lines_edges)
-        
+
         cv2.waitKey(1)
                 
         #=========================================
