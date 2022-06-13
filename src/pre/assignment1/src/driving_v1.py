@@ -93,10 +93,10 @@ def preprocess_image(img):
     
     # perspective transformation
     src = np.float32([
+        (420,275),
         (200,275),
-        (420,275),    
-        (600,400),
-        (40,400) 
+        (40,400),
+        (600,400) 
         # (150,350),
         # (500,350),    
         # (610,400),
@@ -104,10 +104,10 @@ def preprocess_image(img):
     ])
 
     dst = np.float32([
-        (xsize - 350, 0),
-        (350, 0),
-        (350, ysize),
-        (xsize - 350, ysize)
+        (xsize - 175, 0),
+        (175, 0),
+        (175, ysize),
+        (xsize - 175, ysize)
     ])
     
     M = cv2.getPerspectiveTransform(src, dst)
@@ -181,6 +181,25 @@ def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
 def weighted_img(img, initial_img, alpha=0.8,beta=1.,gamma=0.):
     return cv2.addWeighted(initial_img,alpha,img, beta,gamma)
 
+def birdView(img,M):
+    '''
+    Transform image to birdeye view
+    img:binary image
+    M:transformation matrix
+    return a wraped image
+    '''
+    img_sz = (img.shape[1],img.shape[0])
+    img_warped = cv2.warpPerspective(img,M,img_sz,flags = cv2.INTER_LINEAR)
+    return img_warped
+def perspective_transform(src_pts,dst_pts):
+    '''
+    perspective transform
+    args:source and destiantion points
+    return M and Minv
+    '''
+    M = cv2.getPerspectiveTransform(src_pts,dst_pts)
+    Minv = cv2.getPerspectiveTransform(dst_pts,src_pts)
+    return {'M':M,'Minv':Minv}
 #====== 이미지 전처리 ==========
 
 def start():
@@ -228,28 +247,30 @@ def start():
         min_line_len=80
         max_line_gap=100
         vertices = np.array([[(0,imshape[0]), (0,imshape[0]-150),(imshape[1],imshape[0]-150), (imshape[1],imshape[0])]], dtype=np.int32)
-
+        
         # 전처리
         gray = grayscale(imgRGB)
         blur_gray = gaussian_blur(gray, kernel_size)
         edges= canny(blur_gray, low_threshould, high_threshould)
         mask = region_of_interest(edges, vertices)
         # bird_eye_img = get_bird_eye(mask)
-        
-        lines=hough_lines(mask,rho,theta,threshold,min_line_len,max_line_gap)
+        try: 
+            lines=hough_lines(mask,rho,theta,threshold,min_line_len,max_line_gap)
+        except:
+            lines=cashe    
         lines_edges = weighted_img(lines,img,alpha=0.8,beta=1.,gamma=0.)
-        
+        cashe = lines
         # plt.figure(figsize=(10,8))
         # plt.imshow("Check_line"lines_edges)
         # plt.show()
-
+        roi = preprocess_image(mask)
         # cv2.imshow("Img", img)
         # cv2.imshow("Gray", gray)
         # cv2.imshow("Blue_gray", blur_gray)
         # cv2.imshow("Edges", edges)
         # cv2.imshow("Mask", mask)
         # cv2.imshow("CAM View", lines)
-        cv2.imshow("CAM View", lines)
+        cv2.imshow("CAM View", roi)
 
         cv2.waitKey(1)
                 

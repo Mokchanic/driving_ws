@@ -104,7 +104,6 @@ def preprocess_image(img):
         # (500,350),    
         # (610,400),
         # (30,400) 
-        # (xsize,ysize-150), (0,ysize-150), (0,ysize), (xsize,ysize)
     ])
 
     dst = np.float32([

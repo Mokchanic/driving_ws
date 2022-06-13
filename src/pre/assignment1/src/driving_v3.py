@@ -78,7 +78,7 @@ def drive(angle, speed):
 
     motor.publish(motor_msg)
 
-#=============================================그래서 요즘 나오는 자율 주행으로 연결하기는 조금 어렵지만, 라인트레이싱을 영상으로 해보겠다~ 정도는 커버될 것 같네요^^
+#=============================================
 # 실질적인 메인 함수 
 # 카메라 토픽을 받아 각종 영상처리와 알고리즘을 통해
 # 차선의 위치를 파악한 후에 조향각을 결정하고,
@@ -95,10 +95,17 @@ def preprocess_image(img):
     
     # perspective transformation
     src = np.float32([
-        (200,275),
-        (420,275),    
-        (600,400),
-        (40,400) 
+        (410,300),
+        (226,300),
+        (19.48,400),
+        (606.49,400)
+        
+        
+        #(420,275),
+        #(200,275),
+        #(40,400),
+        #(600,400)
+        
         # (150,350),
         # (500,350),    
         # (610,400),
@@ -106,10 +113,20 @@ def preprocess_image(img):
     ])
 
     dst = np.float32([
-        (xsize - 350, 0),
-        (350, 0),
-        (350, ysize),
-        (xsize - 350, ysize)
+        #(xsize - 175, 0),
+        #(175, 0),
+        #(175, ysize),
+        #(xsize - 175, ysize)
+        
+        (xsize - 175, 0),
+        (175, 0),
+        (175, ysize),
+        (xsize - 175, ysize)
+        # (0,0),
+        # (560 - 1, 0),
+        # (560 - 1, 125 - 1),
+        # (0, 125 -1)
+
     ])
     
     M = cv2.getPerspectiveTransform(src, dst)
@@ -370,6 +387,7 @@ def polyfit_sliding_window(binary, lane_width_px=578, diagnostics=False):
     mid_point = int(histogram.shape[0] / 2)
     left_x_base = np.argmax(histogram[:mid_point])
     right_x_base = np.argmax(histogram[mid_point:]) + mid_point
+    
     
     #### sliding window ####
     out = np.dstack((binary, binary, binary)) * 255 # channel 3개로 차원을 늘려준것과 동일
@@ -703,6 +721,7 @@ def start():
 
         gray = grayscale(imgRGB)
         edges= canny(gray, low_threshould, high_threshould)
+
         bird_eye_img = get_bird_eye(img)
 
         cv2.imshow("CAM View2", edges)       
