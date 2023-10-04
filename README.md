@@ -6,11 +6,20 @@ ROS: ROS melodic
 
 # Set up 1. ros-bridge
 1. Open the Terminal
-2. install ros-bridge and run ros-bridge
+2. set-up env
 <pre>
   <code>
-      $ sudo apt-get install ros-<rosdistro>-rosbridge-server
-      $ roslaunch rosbridge_server rosbridge_websocket.launch
+      $ ./setup.sh
+      $ ./setup_bashrc.sh      
+  </code>
+</pre>
+
+start roslaunch & simulation
+<pre>
+  <code>
+    $ $ roslaunch rosbridge_server rosbridge_websocket.launch
+    $ cd driving_ws/src/pre/xycar_sim_driving
+    $ ./xycar3Dsimulator.x86_64
   </code>
 </pre>
 
