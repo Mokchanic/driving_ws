@@ -1,16 +1,16 @@
 # driving_ws
-This workspace was created from Team_KUckal.
+This workspace was created for line detect.
 
 OS : ubuntu 18.04
 ROS: ROS melodic
 
-# Set up 1. ros-bridge
+# Set up assignment1
 1. Open the Terminal
 2. set-up env
 <pre>
   <code>
       $ ./setup.sh
-      $ ./setup_bashrc.sh      
+      $ ./setup_bashrc.sh
   </code>
 </pre>
 
